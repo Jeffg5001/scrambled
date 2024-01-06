@@ -287,7 +287,7 @@ class Game extends StatelessWidget {
                     appState.setCurrentScreen(Screen.name);
                   },
                   label: const Text('Start Over'),
-                  icon: const Icon(Icons.restart_alt, size: 48, semanticLabel: 'start over',),
+                  icon: const Icon(Icons.restart_alt, semanticLabel: 'start over',),
                 ),
               ],
             )

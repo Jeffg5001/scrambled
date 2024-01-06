@@ -66,7 +66,7 @@ var wordList = [
   ['CO', 'IN', 'CI', 'DEN', 'CE'],
   ['DE', 'ST', 'R', 'OY', 'ED'],
   ['DE', 'M', 'OL', 'I', 'SH'],
-  ['D', 'R', 'I', 'V', 'E'],
+  ['D', 'R', 'I', 'V', 'ING'],
   ['D', 'A', 'N', 'G', 'ER'],
   ['CA', 'TA', 'P', 'UL', 'T'],
   ['C', 'AR', 'A', 'FE', 'S'],
@@ -81,4 +81,5 @@ var wordList = [
   ['S', 'T', 'A', 'CK', 'ED'],
   ['IN', 'T', 'EN', 'S', 'IVE'],
   ['S', 'N', 'EA', 'K', 'S'],
+  ['S', 'T', 'A', 'G', 'ING']
 ];
