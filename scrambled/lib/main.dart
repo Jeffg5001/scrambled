@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:scrambled/word_list.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
   runApp(const MyApp());
 }
 
@@ -12,7 +21,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    wordList.shuffle();
+    wordList.shuffle(); 
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
@@ -35,6 +44,9 @@ class MyApp extends StatelessWidget {
           // tested with just a hot reload.
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xB5D0DFFF)),
           useMaterial3: true,
+          textTheme: const TextTheme(displayMedium: TextStyle(
+            color: Color.fromRGBO(51, 51, 51, 1),
+          )),
         ),
         home: const MyHomePage(title: 'Flutter Demo Home Page'),
       ),
@@ -47,8 +59,8 @@ enum Screen { name, game }
 class Tile {
   final int index;
   final String content;
-  final bool enabled;
-  const Tile({
+  bool enabled;
+  Tile({
     required this.index,
     required this.content,
     required this.enabled,
@@ -62,6 +74,7 @@ List<Tile> createTileList(List<String> word) {
     result.add(Tile(index: counter, content: element, enabled: true));
     counter += 1;
   }
+  result.shuffle();
   return result;
 }
 
@@ -69,7 +82,6 @@ class MyAppState extends ChangeNotifier {
   var userName = '';
   setUsername(input) {
     userName = input;
-    notifyListeners();
   }
 
   Screen currentScreen = Screen.name;
@@ -78,24 +90,25 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  var currentWordIndex = 0;
-  var history = [];
-  var currentGuessNum = 0;
-  var currentGuess = '';
-  var scrambledWord = createTileList(wordList[0]);
+  int currentWordIndex = 0;
+  List<List<String>> history = [];
+  int currentGuessNum = 0;
+  String currentGuess = '';
+  List<Tile> scrambledWord = createTileList(wordList[0]);
   getNext() {
     history.add(wordList[currentWordIndex]);
     currentWordIndex = (currentWordIndex + 1) % wordList.length;
     currentGuessNum = 0;
     currentGuess = '';
     scrambledWord = createTileList(wordList[currentWordIndex]);
-    scrambledWord.shuffle();
     notifyListeners();
   }
 
-  addGuess() {
+  addGuess(int index) {
     currentGuess += wordList[currentWordIndex][currentGuessNum];
     currentGuessNum += 1;
+    int indexToDisable = scrambledWord.indexWhere((element) => element.index == index);
+    scrambledWord[indexToDisable].enabled = false;
     notifyListeners();
   }
 
@@ -106,6 +119,15 @@ class MyAppState extends ChangeNotifier {
   scramble() {
     scrambledWord.shuffle();
     notifyListeners();
+  }
+
+  reset() {
+    wordList.shuffle();
+    currentWordIndex = 0;
+    currentGuessNum = 0;
+    currentGuess = '';
+    scrambledWord = createTileList(wordList[0]);
+    history = [];
   }
 
 }
@@ -137,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case Screen.name:
         page = const NameForm();
       case Screen.game:
-        page = Game();
+        page = const Game();
     }
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -147,12 +169,40 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+          // Center is a layout widget. It takes a single child and positions it
+          // in the middle of the parent.
         child: page,
       ),
+      floatingActionButton: appState.currentScreen == Screen.game ? TextButton(
+        onPressed: () {
+          appState.getNext();
+        },
+        style: TextButton.styleFrom(
+          shape: const CircleBorder(),
+          padding: const EdgeInsets.all(20),
+        ),
+        child: const Icon(Icons.arrow_forward, size: 48, semanticLabel: 'next word',),
+      ) : null,
     );
   }
+}
+
+class ShapesPainter extends CustomPainter{
+
+  @override void paint (Canvas canvas, Size size) {
+    final paint = Paint();
+    // set the color property of the paint
+    paint.color = const Color.fromRGBO(255, 209, 186, 1);
+
+    // center of the canvas is (x,y) => (width/2, height/2)
+    var offset = const Offset(130, -110);
+    
+    // draw the circle on centre of canvas having radius 75.0
+    canvas.drawCircle(offset, 237.0, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
 class Game extends StatelessWidget {
@@ -164,57 +214,86 @@ class Game extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var user = appState.userName;
-
-    return Column(
-      children: [
-        Row(
+    return CustomPaint(
+      painter: ShapesPainter(),
+      child: SafeArea(
+        child: Column(
           children: [
-            Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Padding(
+                  padding:  EdgeInsets.all(8.0),
+                  child: Image(
+                    image: AssetImage('images/scrambledLogo.png'),
+                    width: 200,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Hello, $user!',
+                    style: GoogleFonts.rampartOne().copyWith(
+                      fontSize: Theme.of(context).textTheme.displayMedium!.fontSize,
+                      color: Theme.of(context).textTheme.displayMedium!.color
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 70),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const SizedBox(width: 64,),
+                ...appState.scrambledWord.map((tile) => TileButton(tile: tile)),
+                TextButton(
+                  onPressed: () {
+                    appState.scramble();
+                  },
+                  style: TextButton.styleFrom(
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(20),
                   ),
-                  child: const Icon(
-                    Icons.access_time,
-                    size: 100,
-                  ),
-                )),
-            Text('Hello, $user!'),
-          ],
-        ),
-        Row(
-          children: [
-            ...appState.scrambledWord.map((tile) => TileButton(tile: tile)),
-            TextButton(
-              onPressed: () {
-                appState.scramble();
-                // TODO ensure word is scrambled and not the same order as before
-                print('shuffled array ${appState.scrambledWord}');
-              },
-              style: TextButton.styleFrom(
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(20),
-              ),
-              child: const Icon(Icons.shuffle),
+                  child: const Icon(Icons.shuffle),
+                ),
+              ],
             ),
+            const SizedBox(
+              height: 30,
+            ),
+            Container(
+              height: 50,
+              width: 593.2,
+              padding: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                    bottom: BorderSide(color: Theme.of(context).dividerColor)),
+              ),
+              child: Text(
+                appState.currentGuess,
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    appState.reset();
+                    appState.setCurrentScreen(Screen.name);
+                  },
+                  label: const Text('Start Over'),
+                  icon: const Icon(Icons.restart_alt, size: 48, semanticLabel: 'start over',),
+                ),
+              ],
+            )
           ],
         ),
-        const SizedBox(
-          height: 75,
-        ),
-        Container(
-          height: 20,
-          width: 650,
-          decoration: BoxDecoration(
-            border: Border(
-                bottom: BorderSide(color: Theme.of(context).dividerColor)),
-          ),
-          child: Text(appState.currentGuess),
-        )
-      ],
+      ),
     );
   }
 }
@@ -235,19 +314,30 @@ class TileButton extends StatelessWidget {
       onPressed: tile.enabled ? () {
         if (tile.content == target) {
           if (appState.currentGuessNum < 4) {
-            appState.addGuess();
+            HapticFeedback.selectionClick();
+            appState.addGuess(tile.index);
           } else {
             appState.getNext();
           }
         } else {
           // incorrect feedback
+          HapticFeedback.vibrate();
         }
       } : null,
       style: FilledButton.styleFrom(
-        shape: RoundedRectangleBorder(),
-        padding: EdgeInsets.all(25.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(2)),
+          side: BorderSide(width: 1, color: Theme.of(context).colorScheme.inversePrimary),
+        ),
+        padding: const EdgeInsets.fromLTRB(10, 25, 10, 25),
+        maximumSize: const Size(100, 100),
+        minimumSize: const Size(100, 100),
       ),
-      child: Text(tile.content),
+      child: Text(tile.content,
+        style: Theme.of(context).textTheme.titleLarge!.copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+      ),
     );
   }
 }
@@ -282,7 +372,7 @@ class NameForm extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary),
         ),
         const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 160, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 160, vertical: 10),
           child: MyCustomForm(),
         ),
       ],
@@ -321,23 +411,27 @@ class MyCustomFormState extends State<MyCustomForm> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     // Build a Form widget using the _formKey created above.
-    handleDone(String data) {
+    handleDone(String data) async {
       if (_formKey.currentState!.validate()) {
         // If the form is valid, display a snackbar. In the real world,
         // you'd often call a server or save the information in a database.
         appState.setUsername(data);
-        print('done pressed');
         // switch pages
+        // hideKeyboard
+        FocusManager.instance.primaryFocus?.unfocus();
+        await Future.delayed(const Duration(milliseconds: 200));
         appState.setCurrentScreen(Screen.game);
       }
     }
 
-    handleSubmit() {
+    handleSubmit() async {
       if (_formKey.currentState!.validate()) {
         // If the form is valid, display a snackbar. In the real world,
         // you'd often call a server or save the information in a database.
         appState.setUsername(myController.text);
-        print('submitted');
+        // hide keyboard
+        FocusManager.instance.primaryFocus?.unfocus();
+        await Future.delayed(const Duration(milliseconds: 400));
         // switch pages
         appState.setCurrentScreen(Screen.game);
       }
@@ -353,6 +447,9 @@ class MyCustomFormState extends State<MyCustomForm> {
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter some text';
+              }
+              if (value.length > 9) {
+                return 'Please limit the character length to 9';
               }
               return null;
             },
