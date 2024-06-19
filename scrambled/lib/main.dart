@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:scrambled/word_list.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 
 void main() {
@@ -42,7 +41,7 @@ class MyApp extends StatelessWidget {
           //
           // This works for code too, not just values: Most code changes can be
           // tested with just a hot reload.
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xB5D0DFFF)),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(243, 250, 255, 1)),
           useMaterial3: true,
           textTheme: const TextTheme(displayMedium: TextStyle(
             color: Color.fromRGBO(51, 51, 51, 1),
@@ -54,7 +53,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-enum Screen { name, game }
+enum Screen { landing, game }
 
 class Tile {
   final int index;
@@ -84,7 +83,7 @@ class MyAppState extends ChangeNotifier {
     userName = input;
   }
 
-  Screen currentScreen = Screen.name;
+  Screen currentScreen = Screen.landing;
   setCurrentScreen(Screen screen) {
     currentScreen = screen;
     notifyListeners();
@@ -156,8 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
     var appState = context.watch<MyAppState>();
     Widget page;
     switch (appState.currentScreen) {
-      case Screen.name:
-        page = const NameForm();
+      case Screen.landing:
+        page = const LandingPage();
       case Screen.game:
         page = const Game();
     }
@@ -192,7 +191,7 @@ class ShapesPainter extends CustomPainter{
   @override void paint (Canvas canvas, Size size) {
     final paint = Paint();
     // set the color property of the paint
-    paint.color = const Color.fromRGBO(255, 209, 186, 1);
+    paint.color = const Color.fromRGBO(246, 191, 108, 1);
 
     // center of the canvas is (x,y) => (width/2, height/2)
     var offset = const Offset(130, -110);
@@ -213,35 +212,27 @@ class Game extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var user = appState.userName;
     return CustomPaint(
       painter: ShapesPainter(),
       child: SafeArea(
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const Padding(
-                  padding:  EdgeInsets.all(8.0),
-                  child: Image(
-                    image: AssetImage('images/scrambledLogo.png'),
-                    width: 200,
-                  ),
-                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Hello, $user!',
-                    style: GoogleFonts.rampartOne().copyWith(
-                      fontSize: Theme.of(context).textTheme.displayMedium!.fontSize,
-                      color: Theme.of(context).textTheme.displayMedium!.color
-                    ),
+                  child: TextButton(
+                    onPressed: () {
+                      appState.reset();
+                      appState.setCurrentScreen(Screen.landing);
+                    },
+                    child: const Icon(Icons.home_outlined, semanticLabel: 'go to homescreen', size: 68),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 70),
+            const SizedBox(height: 50),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -255,42 +246,32 @@ class Game extends StatelessWidget {
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(20),
                   ),
-                  child: const Icon(Icons.shuffle),
+                  child: const Icon(Icons.shuffle, size: 36,),
                 ),
               ],
             ),
             const SizedBox(
-              height: 30,
+              height: 43,
+            ),
+            Text(
+              appState.currentGuess,
+              style: Theme.of(context).textTheme.displaySmall,
             ),
             Container(
-              height: 50,
+              height: 18,
               width: 593.2,
               padding: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(color: Theme.of(context).dividerColor)),
-              ),
-              child: Text(
-                appState.currentGuess,
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
+                borderRadius: const BorderRadius.all(Radius.circular(9)),
+                border: Border.all(
+                  width: 9,
+                  color: const Color.fromRGBO(169, 197, 250, 1),
+                )
+              )
             ),
             const SizedBox(
               height: 20,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.reset();
-                    appState.setCurrentScreen(Screen.name);
-                  },
-                  label: const Text('Start Over'),
-                  icon: const Icon(Icons.restart_alt, semanticLabel: 'start over',),
-                ),
-              ],
-            )
           ],
         ),
       ),
@@ -325,25 +306,26 @@ class TileButton extends StatelessWidget {
         }
       } : null,
       style: FilledButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(2)),
-          side: BorderSide(width: 1, color: Theme.of(context).colorScheme.inversePrimary),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(4)),
+          side: BorderSide(width: 2, color:  Color.fromRGBO(21, 89, 222, 1)),
         ),
         padding: const EdgeInsets.fromLTRB(10, 25, 10, 25),
         maximumSize: const Size(100, 100),
         minimumSize: const Size(100, 100),
+        backgroundColor: const Color.fromRGBO(254, 255, 220, 1)
       ),
       child: Text(tile.content,
         style: Theme.of(context).textTheme.titleLarge!.copyWith(
-          color: Theme.of(context).colorScheme.onPrimary,
+          color: const Color.fromRGBO(21, 89, 222, 1),
         ),
       ),
     );
   }
 }
 
-class NameForm extends StatelessWidget {
-  const NameForm({
+class LandingPage extends StatelessWidget {
+  const LandingPage({
     super.key,
   });
 
@@ -365,18 +347,39 @@ class NameForm extends StatelessWidget {
       // wireframe for each widget.
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text(
-          'Name?',
-          style: Theme.of(context).textTheme.displayMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary),
+        Image.asset(
+          'images/yolk-wordo-logo.png',
+          width: 500
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 160, vertical: 10),
-          child: MyCustomForm(),
+          child: PlayButton(),
         ),
       ],
     );
+  }
+}
+
+class PlayButton extends StatelessWidget {
+  const PlayButton({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    onPressed() {
+        appState.setCurrentScreen(Screen.game);
+    }
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        backgroundColor: const Color.fromRGBO(254, 255, 220, 1),
+        foregroundColor: const Color.fromRGBO(21, 89, 222, 1),
+        side: const BorderSide(color: Color.fromRGBO(21, 89, 222, 1), width: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 48),
+      ),
+      onPressed: onPressed,
+      child: const Text('PLAY'));
   }
 }
 
