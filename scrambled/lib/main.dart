@@ -78,11 +78,6 @@ List<Tile> createTileList(List<String> word) {
 }
 
 class MyAppState extends ChangeNotifier {
-  var userName = '';
-  setUsername(input) {
-    userName = input;
-  }
-
   Screen currentScreen = Screen.landing;
   setCurrentScreen(Screen screen) {
     currentScreen = screen;
@@ -380,92 +375,5 @@ class PlayButton extends StatelessWidget {
       ),
       onPressed: onPressed,
       child: const Text('PLAY'));
-  }
-}
-
-class MyCustomForm extends StatefulWidget {
-  const MyCustomForm({super.key});
-
-  @override
-  MyCustomFormState createState() {
-    return MyCustomFormState();
-  }
-}
-
-// Define a corresponding State class.
-// This class holds data related to the form.
-class MyCustomFormState extends State<MyCustomForm> {
-  // Create a global key that uniquely identifies the Form widget
-  // and allows validation of the form.
-  //
-  // Note: This is a `GlobalKey<FormState>`,
-  // not a GlobalKey<MyCustomFormState>.
-  final _formKey = GlobalKey<FormState>();
-  final myController = TextEditingController();
-
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is disposed.
-    myController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    // Build a Form widget using the _formKey created above.
-    handleDone(String data) async {
-      if (_formKey.currentState!.validate()) {
-        // If the form is valid, display a snackbar. In the real world,
-        // you'd often call a server or save the information in a database.
-        appState.setUsername(data);
-        // switch pages
-        // hideKeyboard
-        FocusManager.instance.primaryFocus?.unfocus();
-        await Future.delayed(const Duration(milliseconds: 200));
-        appState.setCurrentScreen(Screen.game);
-      }
-    }
-
-    handleSubmit() async {
-      if (_formKey.currentState!.validate()) {
-        // If the form is valid, display a snackbar. In the real world,
-        // you'd often call a server or save the information in a database.
-        appState.setUsername(myController.text);
-        // hide keyboard
-        FocusManager.instance.primaryFocus?.unfocus();
-        await Future.delayed(const Duration(milliseconds: 400));
-        // switch pages
-        appState.setCurrentScreen(Screen.game);
-      }
-    }
-
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: <Widget>[
-          // Add TextFormFields and ElevatedButton here.
-          TextFormField(
-            // The validator receives the text that the user has entered.
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              if (value.length > 9) {
-                return 'Please limit the character length to 9';
-              }
-              return null;
-            },
-            controller: myController,
-            onFieldSubmitted: handleDone,
-          ),
-          const SizedBox(height: 5),
-          ElevatedButton.icon(
-              onPressed: handleSubmit,
-              label: const Text('continue'),
-              icon: const Icon(Icons.check)),
-        ],
-      ),
-    );
   }
 }
