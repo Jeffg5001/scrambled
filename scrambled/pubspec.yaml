@@ -1,4 +1,4 @@
-name: scrambled
+name: yolk_wordo
 description: "A fun word game for kids."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

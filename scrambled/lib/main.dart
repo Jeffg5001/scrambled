@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:scrambled/word_list.dart';
+import 'package:yolk_wordo/word_list.dart';
 
 
 void main() {
@@ -41,6 +43,7 @@ class MyApp extends StatelessWidget {
           //
           // This works for code too, not just values: Most code changes can be
           // tested with just a hot reload.
+          // colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(243, 250, 255, 1)),
           colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(243, 250, 255, 1)),
           useMaterial3: true,
           textTheme: const TextTheme(displayMedium: TextStyle(
@@ -100,10 +103,13 @@ class MyAppState extends ChangeNotifier {
 
   addGuess(int index) {
     currentGuess += wordList[currentWordIndex][currentGuessNum];
-    currentGuessNum += 1;
     int indexToDisable = scrambledWord.indexWhere((element) => element.index == index);
     scrambledWord[indexToDisable].enabled = false;
     notifyListeners();
+  }
+
+  incrementGuess() {
+    currentGuessNum += 1;
   }
 
   String getTarget() {
@@ -289,11 +295,12 @@ class TileButton extends StatelessWidget {
     return FilledButton(
       onPressed: tile.enabled ? () {
         if (tile.content == target) {
+          appState.addGuess(tile.index);
+          HapticFeedback.selectionClick();
           if (appState.currentGuessNum < 4) {
-            HapticFeedback.selectionClick();
-            appState.addGuess(tile.index);
+            appState.incrementGuess();
           } else {
-            appState.getNext();
+            Timer(const Duration(milliseconds: 1000), () => appState.getNext());
           }
         } else {
           // incorrect feedback
